@@ -1,21 +1,26 @@
-
 import 'package:flutter/material.dart';
-import '../database/app_database.dart';
+import 'package:provider/provider.dart';
+import '../viewmodels/cita_viewmodel.dart';
 import '../models/usuario.dart';
 import '../models/diseno.dart';
 import '../models/cita.dart';
 import 'confirmacion_screen.dart';
+import '../models/color.dart';
+import 'resumen_screen.dart';
+
 
 class ReservaScreen extends StatefulWidget {
   final Diseno diseno;
   final Usuario usuario;
   final String observaciones;
+  final ColorDiseno colorSeleccionado; // ← agrega esto
 
   const ReservaScreen({
     super.key,
     required this.diseno,
     required this.usuario,
     required this.observaciones,
+    required this.colorSeleccionado, // ← agrega esto
   });
 
   @override
@@ -44,7 +49,7 @@ class _ReservaScreenState extends State<ReservaScreen> {
       builder: (context, child) => Theme(
         data: Theme.of(context).copyWith(
           colorScheme: const ColorScheme.light(
-            primary: Color(0xFFE91E8C),
+            primary: Color(0xFFE57FA8),
           ),
         ),
         child: child!,
@@ -53,51 +58,46 @@ class _ReservaScreenState extends State<ReservaScreen> {
     if (fecha != null) setState(() => _fechaSeleccionada = fecha);
   }
 
-  Future<void> _confirmarCita() async {
-    if (_fechaSeleccionada == null) {
-      setState(() => _error = 'Selecciona una fecha');
-      return;
-    }
-    if (_horaSeleccionada == null) {
-      setState(() => _error = 'Selecciona una hora');
-      return;
-    }
-    if (_direccionController.text.trim().isEmpty) {
-      setState(() => _error = 'Ingresa una dirección');
-      return;
-    }
-
-    final cita = Cita(
-      usuarioId: widget.usuario.id!,
-      disenoId: widget.diseno.id!,
-      fecha: _fechaSeleccionada!.toIso8601String().substring(0, 10),
-      hora: _horaSeleccionada!,
-      direccion: _direccionController.text.trim(),
-      observaciones: widget.observaciones.isEmpty
-          ? null
-          : widget.observaciones,
-    );
-
-    await AppDatabase.instance.insertarCita(cita);
-
-    Navigator.pushReplacement(
-      context,
-      MaterialPageRoute(
-        builder: (_) => ConfirmacionScreen(
-          cita: cita,
-          diseno: widget.diseno,
-          usuario: widget.usuario,
-        ),
-      ),
-    );
+Future<void> _confirmarCita() async {
+  if (_fechaSeleccionada == null) {
+    setState(() => _error = 'Selecciona una fecha');
+    return;
   }
+  if (_horaSeleccionada == null) {
+    setState(() => _error = 'Selecciona una hora');
+    return;
+  }
+  if (_direccionController.text.trim().isEmpty) {
+    setState(() => _error = 'Ingresa una dirección');
+    return;
+  }
+
+  Navigator.push(
+    context,
+    MaterialPageRoute(
+      builder: (_) => ResumenScreen(
+        diseno: widget.diseno,
+        usuario: widget.usuario,
+        colorSeleccionado: widget.colorSeleccionado,
+        fecha: _fechaSeleccionada!.toIso8601String().substring(0, 10),
+        hora: _horaSeleccionada!,
+        direccion: _direccionController.text.trim(),
+        observaciones: widget.observaciones.isEmpty
+            ? null
+            : widget.observaciones,
+      ),
+    ),
+  );
+}
 
   @override
   Widget build(BuildContext context) {
+    final vm = context.watch<CitaViewModel>();
+
     return Scaffold(
       backgroundColor: const Color(0xFFFFF0F5),
       appBar: AppBar(
-        backgroundColor: const Color(0xFFE91E8C),
+        backgroundColor: const Color(0xFFE57FA8),
         title: const Text(
           'Reservar cita',
           style: TextStyle(color: Colors.white),
@@ -125,7 +125,7 @@ class _ReservaScreenState extends State<ReservaScreen> {
               ),
               child: Row(
                 children: [
-                  const Icon(Icons.spa, color: Color(0xFFE91E8C), size: 32),
+                  const Icon(Icons.spa, color: Color(0xFFE57FA8), size: 32),
                   const SizedBox(width: 12),
                   Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
@@ -154,7 +154,7 @@ class _ReservaScreenState extends State<ReservaScreen> {
               style: TextStyle(
                 fontWeight: FontWeight.bold,
                 fontSize: 16,
-                color: Color(0xFFE91E8C),
+                color: Color(0xFFE57FA8),
               ),
             ),
             const SizedBox(height: 8),
@@ -172,7 +172,7 @@ class _ReservaScreenState extends State<ReservaScreen> {
                 child: Row(
                   children: [
                     const Icon(Icons.calendar_today,
-                        color: Color(0xFFE91E8C)),
+                        color: Color(0xFFE57FA8)),
                     const SizedBox(width: 12),
                     Text(
                       _fechaSeleccionada == null
@@ -196,7 +196,7 @@ class _ReservaScreenState extends State<ReservaScreen> {
               style: TextStyle(
                 fontWeight: FontWeight.bold,
                 fontSize: 16,
-                color: Color(0xFFE91E8C),
+                color: Color(0xFFE57FA8),
               ),
             ),
             const SizedBox(height: 8),
@@ -213,17 +213,19 @@ class _ReservaScreenState extends State<ReservaScreen> {
                     ),
                     decoration: BoxDecoration(
                       color: seleccionada
-                          ? const Color(0xFFE91E8C)
+                          ? const Color(0xFFE57FA8)
                           : Colors.white,
                       borderRadius: BorderRadius.circular(20),
                       border: Border.all(
-                        color: const Color(0xFFE91E8C),
+                        color: const Color(0xFFE57FA8),
                       ),
                     ),
                     child: Text(
                       hora,
                       style: TextStyle(
-                        color: seleccionada ? Colors.white : const Color(0xFFE91E8C),
+                        color: seleccionada
+                            ? Colors.white
+                            : const Color(0xFFE57FA8),
                         fontWeight: FontWeight.bold,
                       ),
                     ),
@@ -239,7 +241,7 @@ class _ReservaScreenState extends State<ReservaScreen> {
               style: TextStyle(
                 fontWeight: FontWeight.bold,
                 fontSize: 16,
-                color: Color(0xFFE91E8C),
+                color: Color(0xFFE57FA8),
               ),
             ),
             const SizedBox(height: 8),
@@ -249,7 +251,7 @@ class _ReservaScreenState extends State<ReservaScreen> {
                 hintText: 'Ej: Calle 123 # 45-67, Bogotá',
                 prefixIcon: const Icon(
                   Icons.location_on,
-                  color: Color(0xFFE91E8C),
+                  color: Color(0xFFE57FA8),
                 ),
                 border: OutlineInputBorder(
                   borderRadius: BorderRadius.circular(12),
@@ -260,26 +262,35 @@ class _ReservaScreenState extends State<ReservaScreen> {
             ),
             const SizedBox(height: 12),
 
-            if (_error != null)
-              Text(_error!, style: const TextStyle(color: Colors.red)),
+            if (_error != null || vm.error != null)
+              Text(
+                _error ?? vm.error!,
+                style: const TextStyle(color: Colors.red),
+              ),
 
             const SizedBox(height: 24),
 
             // Botón confirmar
-            ElevatedButton(
-              onPressed: _confirmarCita,
-              style: ElevatedButton.styleFrom(
-                backgroundColor: const Color(0xFFE91E8C),
-                minimumSize: const Size(double.infinity, 50),
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(12),
-                ),
-              ),
-              child: const Text(
-                'Confirmar cita',
-                style: TextStyle(color: Colors.white, fontSize: 16),
-              ),
-            ),
+            vm.cargando
+                ? const Center(
+                    child: CircularProgressIndicator(
+                      color: Color(0xFFE57FA8),
+                    ),
+                  )
+                : ElevatedButton(
+                    onPressed: _confirmarCita,
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: const Color(0xFFE57FA8),
+                      minimumSize: const Size(double.infinity, 50),
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(12),
+                      ),
+                    ),
+                    child: const Text(
+                      'Confirmar cita',
+                      style: TextStyle(color: Colors.white, fontSize: 16),
+                    ),
+                  ),
           ],
         ),
       ),
